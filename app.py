@@ -3,7 +3,12 @@ import numpy as np
 from tensorflow import keras
 from tensorflow.keras.layers import Dense
 
-# Model Loading Fix: Handle 'quantization_config' error in newer Keras versions
+st.set_page_config(page_title="Stroke Prediction", layout="centered")
+
+st.title("💓 Cardiovascular Stroke Prediction")
+st.write("Select patient details to assess stroke risk")
+
+# Model Loading Fix: Handle 'quantization_config' error in newer Keras versions 
 class CustomDense(Dense):
     def __init__(self, *args, **kwargs):
         # Strip the unrecognized argument if present
@@ -11,21 +16,14 @@ class CustomDense(Dense):
         super().__init__(*args, **kwargs)
 
 # Load trained model with custom object scope and compile=False (safer for inference)
-try:
-    with keras.utils.custom_object_scope({'Dense': CustomDense}):
-        model = keras.models.load_model("stroke_prediction_model.h5", compile=False)
-except Exception as e:
-    st.error(f"Failed to load model: {e}")
-    # Fallback/Stop to avoid crash loop
-    st.stop()
-
-st.title("💓 Cardiovascular Stroke Prediction")
-st.write("Select patient details to assess stroke risk")
-
-# ---------------- INPUTS (WORDS ONLY) ----------------
-gender = st.selectbox("Gender", ["Female", "Male", "Other"])
-gender_val = {"Female": 0, "Male": 1, "Other": 2}[gender]
-
+with st.spinner("Loading AI model... (this may take 30 seconds on first load)"):
+    try:
+        with keras.utils.custom_object_scope({'Dense': CustomDense}):
+            model = keras.models.load_model("stroke_prediction_model.h5", compile=False)
+        st.success("✅ Model loaded successfully!")
+    except Exception as e:
+        st.error(f"Failed to load model: {e}")
+        st.stop()
 age = st.number_input("Age", min_value=1, max_value=120, value=45)
 
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
