@@ -1,29 +1,47 @@
 import streamlit as st
-import numpy as np
-from tensorflow import keras
-from tensorflow.keras.layers import Dense
 
 st.set_page_config(page_title="Stroke Prediction", layout="centered")
 
 st.title("💓 Cardiovascular Stroke Prediction")
-st.write("Select patient details to assess stroke risk")
+st.write("Loading app...")
 
-# Model Loading Fix: Handle 'quantization_config' error in newer Keras versions 
-class CustomDense(Dense):
-    def __init__(self, *args, **kwargs):
-        # Strip the unrecognized argument if present
-        kwargs.pop('quantization_config', None)
-        super().__init__(*args, **kwargs)
+# Test if basic streamlit works
+if st.button("Click to test"):
+    st.success("✅ App is working!")
 
-# Load trained model with custom object scope and compile=False (safer for inference)
-with st.spinner("Loading AI model... (this may take 30 seconds on first load)"):
-    try:
-        with keras.utils.custom_object_scope({'Dense': CustomDense}):
-            model = keras.models.load_model("stroke_prediction_model.h5", compile=False)
-        st.success("✅ Model loaded successfully!")
-    except Exception as e:
-        st.error(f"Failed to load model: {e}")
-        st.stop()
+st.write("Testing model loading...")
+
+try:
+    import numpy as np
+    st.write("✅ NumPy loaded")
+except Exception as e:
+    st.error(f"NumPy error: {e}")
+
+try:
+    from tensorflow import keras
+    st.write("✅ TensorFlow loaded")
+except Exception as e:
+    st.error(f"TensorFlow error: {e}")
+
+try:
+    from tensorflow.keras.layers import Dense
+    st.write("✅ Keras Dense loaded")
+    
+    class CustomDense(Dense):
+        def __init__(self, *args, **kwargs):
+            kwargs.pop('quantization_config', None)
+            super().__init__(*args, **kwargs)
+    
+    st.write("✅ CustomDense class created")
+    
+    st.write("Loading model...")
+    with keras.utils.custom_object_scope({'Dense': CustomDense}):
+        model = keras.models.load_model("stroke_prediction_model.h5", compile=False)
+    st.success("✅ Model loaded successfully!")
+    
+except Exception as e:
+    st.error(f"Model loading error: {e}")
+    st.write(f"Full error: {str(e)}")
 age = st.number_input("Age", min_value=1, max_value=120, value=45)
 
 hypertension = st.selectbox("Hypertension", ["No", "Yes"])
