@@ -1,9 +1,23 @@
 import streamlit as st
 import numpy as np
 from tensorflow import keras
+from tensorflow.keras.layers import Dense
 
-# Load trained model
-model = keras.models.load_model("stroke_prediction_model.h5")
+# Model Loading Fix: Handle 'quantization_config' error in newer Keras versions
+class CustomDense(Dense):
+    def __init__(self, *args, **kwargs):
+        # Strip the unrecognized argument if present
+        kwargs.pop('quantization_config', None)
+        super().__init__(*args, **kwargs)
+
+# Load trained model with custom object scope and compile=False (safer for inference)
+try:
+    with keras.utils.custom_object_scope({'Dense': CustomDense}):
+        model = keras.models.load_model("stroke_prediction_model.h5", compile=False)
+except Exception as e:
+    st.error(f"Failed to load model: {e}")
+    # Fallback/Stop to avoid crash loop
+    st.stop()
 
 st.title("💓 Cardiovascular Stroke Prediction")
 st.write("Select patient details to assess stroke risk")
